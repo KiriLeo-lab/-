@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172554">
+  <meta name="description" content="Organizador semanal de apartados y presupuesto.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Mis apartados</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#172033;background:#f3f5fa}
+    *{box-sizing:border-box} body{margin:0;padding:20px 14px 40px}
+    main{max-width:520px;margin:auto}
+    header{background:#172554;color:white;padding:22px;border-radius:22px;margin-bottom:16px}
+    h1{margin:0 0 5px;font-size:26px} header p{margin:0;color:#dbeafe}
+    .card{background:white;border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 3px 14px #14213d12}
+    .total{font-size:30px;font-weight:750;margin:4px 0}
+    .muted{color:#667085;font-size:13px}
+    .row{display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #edf0f5}
+    .item:last-child{border:0}.item input{width:21px;height:21px;accent-color:#2563eb}
+    .item label{flex:1}.amount{font-weight:700;white-space:nowrap}
+    .progress{height:10px;background:#e8edf5;border-radius:20px;overflow:hidden;margin:12px 0 6px}
+    .bar{height:100%;width:0;background:#2563eb;transition:width .2s}
+    button{border:0;border-radius:12px;padding:12px 15px;font-weight:650;background:#e8eefc;color:#1d3b79}
+    button.primary{background:#172554;color:white}
+    .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+    .foot{font-size:12px;color:#667085;text-align:center;margin-top:18px}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Mis apartados</h1>
+    <p>Control semanal de tu presupuesto</p>
+  </header>
+  <section class="card">
+    <div class="muted">Presupuesto semanal</div>
+    <div class="total" id="budget">$1,250.00</div>
+    <div class="row muted"><span>Ya separado</span><strong id="saved">$0.00</strong></div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="row muted"><span id="percent">0% completado</span><span>Meta de apartados</span></div>
+  </section>
+  <section class="card">
+    <h2 style="font-size:18px;margin:0 0 4px">Tus apartados</h2>
+    <p class="muted" style="margin:0">Marca cada apartado cuando separes ese dinero.</p>
+    <div id="items"></div>
+    <div class="actions">
+      <button class="primary" id="reset">Reiniciar semana</button>
+    </div>
+  </section>
+  <section class="card">
+    <h2 style="font-size:18px;margin:0 0 12px">Resumen semanal</h2>
+    <div class="row"><span class="muted">Gastos y pagos reservados</span><strong>$519.23</strong></div>
+    <div class="row" style="margin-top:10px"><span class="muted">Disponible después de gastos</span><strong>$730.77</strong></div>
+    <p class="muted" style="margin:12px 0 0">Incluye transporte $100, comida $200, gimnasio $138.46 y plan telefónico $80.77 por semana.</p>
+  </section>
+  <p class="foot">Los cambios se guardan en este dispositivo. Al publicar la app, puedes instalarla desde Chrome.</p>
+</main>
+<script>
+const items = [
+  {id:"doblevi", name:"Doble VI — equipo", amount:300},
+  {id:"personal", name:"Ahorro personal", amount:225},
+  {id:"emergency", name:"Fondo de emergencia", amount:100},
+  {id:"flex", name:"Dinero flexible", amount:105.77}
+];
+const key="mis-apartados-pwa-v1";
+let state={};
+try{state=JSON.parse(localStorage.getItem(key)||"{}")}catch(e){state={}}
+function money(n){return n.toLocaleString("es-MX",{style:"currency",currency:"MXN"})}
+function render(){
+ const host=document.getElementById("items"); host.innerHTML="";
+ items.forEach(it=>{
+  const div=document.createElement("div"); div.className="item";
+  const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=!!state[it.id]; cb.id=it.id;
+  cb.addEventListener("change",()=>{state[it.id]=cb.checked;save();render()});
+  const label=document.createElement("label"); label.htmlFor=it.id; label.textContent=it.name;
+  const amount=document.createElement("span"); amount.className="amount"; amount.textContent=money(it.amount);
+  div.append(cb,label,amount);host.append(div);
+ });
+ const saved=items.reduce((s,it)=>s+(state[it.id]?it.amount:0),0);
+ document.getElementById("saved").textContent=money(saved);
+ document.getElementById("bar").style.width=(saved/730.77*100)+"%";
+ document.getElementById("percent").textContent=Math.round(saved/730.77*100)+"% de tus apartados";
+}
+function save(){localStorage.setItem(key,JSON.stringify(state))}
+document.getElementById("reset").addEventListener("click",()=>{
+ if(confirm("¿Reiniciar las casillas para una nueva semana?")){state={};save();render()}
+});
+render();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
