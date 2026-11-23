@@ -1,94 +1,170 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#172554">
-  <meta name="description" content="Organizador semanal de apartados y presupuesto.">
-  <link rel="manifest" href="manifest.webmanifest">
-  <title>Mis apartados</title>
-  <style>
-    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#172033;background:#f3f5fa}
-    *{box-sizing:border-box} body{margin:0;padding:20px 14px 40px}
-    main{max-width:520px;margin:auto}
-    header{background:#172554;color:white;padding:22px;border-radius:22px;margin-bottom:16px}
-    h1{margin:0 0 5px;font-size:26px} header p{margin:0;color:#dbeafe}
-    .card{background:white;border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 3px 14px #14213d12}
-    .total{font-size:30px;font-weight:750;margin:4px 0}
-    .muted{color:#667085;font-size:13px}
-    .row{display:flex;justify-content:space-between;gap:12px;align-items:center}
-    .item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #edf0f5}
-    .item:last-child{border:0}.item input{width:21px;height:21px;accent-color:#2563eb}
-    .item label{flex:1}.amount{font-weight:700;white-space:nowrap}
-    .progress{height:10px;background:#e8edf5;border-radius:20px;overflow:hidden;margin:12px 0 6px}
-    .bar{height:100%;width:0;background:#2563eb;transition:width .2s}
-    button{border:0;border-radius:12px;padding:12px 15px;font-weight:650;background:#e8eefc;color:#1d3b79}
-    button.primary{background:#172554;color:white}
-    .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
-    .foot{font-size:12px;color:#667085;text-align:center;margin-top:18px}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#172554">
+<meta name="description" content="Organiza tus apartados y avanza hacia tu meta de ahorro.">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>Mis apartados</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#172033;background:#f3f5fa}
+*{box-sizing:border-box}body{margin:0;padding:18px 14px 36px}main{max-width:540px;margin:auto}
+.hero{background:#172554;color:white;padding:24px;border-radius:23px;margin-bottom:15px}
+.hero h1{font-size:27px;margin:0 0 5px}.hero p{margin:0;color:#dbeafe}
+.card{background:white;border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 3px 14px #14213d12}
+h2{font-size:18px;margin:0 0 12px}.muted{color:#667085;font-size:13px}
+label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px}
+input{width:100%;border:1px solid #d7deea;border-radius:11px;padding:12px;font:inherit;background:#fff;color:#172033}
+input[type=checkbox]{width:21px;height:21px;accent-color:#2563eb}
+button{border:0;border-radius:12px;padding:12px 15px;font-weight:700;background:#e8eefc;color:#1d3b79;font:inherit}
+button.primary{background:#172554;color:white}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#f5f7fb;padding:12px;border-radius:13px}
+.big{font-size:26px;font-weight:800;margin-top:3px}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.progress{height:10px;background:#e8edf5;border-radius:20px;overflow:hidden;margin:12px 0 6px}.bar{height:100%;width:0;background:#2563eb}
+.item{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #edf0f5}.item:last-child{border:0}
+.item label{margin:0;flex:1;font-size:14px}.amount{font-weight:750;white-space:nowrap}.smallbtn{padding:7px 10px;font-size:12px}
+.hidden{display:none!important}.foot{text-align:center;font-size:12px;color:#667085;margin-top:18px}
+.notice{background:#eff6ff;color:#1e3a8a;padding:12px;border-radius:12px;font-size:13px}
+</style>
 </head>
 <body>
 <main>
-  <header>
-    <h1>Mis apartados</h1>
-    <p>Control semanal de tu presupuesto</p>
-  </header>
-  <section class="card">
-    <div class="muted">Presupuesto semanal</div>
-    <div class="total" id="budget">$1,250.00</div>
-    <div class="row muted"><span>Ya separado</span><strong id="saved">$0.00</strong></div>
-    <div class="progress"><div class="bar" id="bar"></div></div>
-    <div class="row muted"><span id="percent">0% completado</span><span>Meta de apartados</span></div>
-  </section>
-  <section class="card">
-    <h2 style="font-size:18px;margin:0 0 4px">Tus apartados</h2>
-    <p class="muted" style="margin:0">Marca cada apartado cuando separes ese dinero.</p>
-    <div id="items"></div>
-    <div class="actions">
-      <button class="primary" id="reset">Reiniciar semana</button>
-    </div>
-  </section>
-  <section class="card">
-    <h2 style="font-size:18px;margin:0 0 12px">Resumen semanal</h2>
-    <div class="row"><span class="muted">Gastos y pagos reservados</span><strong>$519.23</strong></div>
-    <div class="row" style="margin-top:10px"><span class="muted">Disponible después de gastos</span><strong>$730.77</strong></div>
-    <p class="muted" style="margin:12px 0 0">Incluye transporte $100, comida $200, gimnasio $138.46 y plan telefónico $80.77 por semana.</p>
-  </section>
-  <p class="foot">Los cambios se guardan en este dispositivo. Al publicar la app, puedes instalarla desde Chrome.</p>
+<section id="setup">
+ <div class="hero"><h1>Bienvenido a Mis apartados</h1><p>Primero definamos qué quieres lograr. Después podrás personalizar tus apartados.</p></div>
+ <form class="card" id="setupForm">
+  <h2>Tu primera meta</h2>
+  <label for="goalName">¿Qué quieres conseguir?</label>
+  <input id="goalName" required maxlength="48" placeholder="Ej. Comprar equipo para Doble VI">
+  <label for="goalTarget">¿Cuánto dinero necesitas? (MXN)</label>
+  <input id="goalTarget" required type="number" min="1" step="0.01" placeholder="Ej. 12000">
+  <label for="goalSaved">¿Cuánto llevas ahorrado? (opcional)</label>
+  <input id="goalSaved" type="number" min="0" step="0.01" value="0">
+  <label for="goalWeekly">¿Cuánto quieres aportar por semana? (MXN)</label>
+  <input id="goalWeekly" required type="number" min="0.01" step="0.01" placeholder="Ej. 300">
+  <label for="weeklyBudget">¿Cuál es tu presupuesto semanal? (MXN)</label>
+  <input id="weeklyBudget" required type="number" min="0.01" step="0.01" value="1250">
+  <div class="notice" style="margin-top:14px">Podrás cambiar estos datos y crear o editar apartados desde la aplicación.</div>
+  <div class="actions"><button class="primary" type="submit" style="width:100%">Crear mi espacio</button></div>
+ </form>
+</section>
+
+<section id="dashboard" class="hidden">
+ <div class="hero">
+  <div class="row"><div><h1>Mis apartados</h1><p>Tu dinero, tus metas, tu progreso.</p></div><button id="settingsBtn" aria-label="Configuración">⚙</button></div>
+ </div>
+ <section class="card">
+  <div class="muted">Mi meta principal</div>
+  <h2 id="dashGoal" style="font-size:21px;margin:4px 0"></h2>
+  <div class="row"><span class="muted">Ahorrado</span><strong id="goalSavedText"></strong></div>
+  <div class="progress"><div class="bar" id="goalBar"></div></div>
+  <div class="row muted"><span id="goalPercent">0% completado</span><span id="goalTargetText"></span></div>
+  <div class="grid" style="margin-top:13px">
+   <div class="stat"><div class="muted">Aportación semanal</div><div class="big" id="weeklyGoalText"></div></div>
+   <div class="stat"><div class="muted">Te falta</div><div class="big" id="goalRemaining"></div></div>
+  </div>
+  <label for="contribution">Registrar un nuevo aporte (MXN)</label>
+  <div class="row"><input id="contribution" type="number" min="0.01" step="0.01" placeholder="Cantidad"><button class="primary" id="addContribution">Aportar</button></div>
+ </section>
+ <section class="card">
+  <div class="row"><div><h2 style="margin-bottom:3px">Apartados de esta semana</h2><div class="muted">Marca cada cantidad cuando la separes.</div></div><strong id="budgetText"></strong></div>
+  <div id="items"></div>
+  <div class="row" style="margin-top:12px"><span class="muted">Marcado esta semana</span><strong id="checkedTotal"></strong></div>
+  <div class="progress"><div class="bar" id="weekBar"></div></div>
+  <div class="actions"><button id="newWeek">Comenzar nueva semana</button><button id="addItem">+ Añadir apartado</button></div>
+ </section>
+ <p class="foot">Tus datos se guardan en este dispositivo. Haz una copia si cambias de teléfono o navegador.</p>
+</section>
+
+<section id="settings" class="hidden">
+ <div class="hero"><h1>Personalizar</h1><p>Ajusta tu meta y tu presupuesto cuando quieras.</p></div>
+ <form class="card" id="settingsForm">
+  <h2>Datos de tu meta</h2>
+  <label for="editGoalName">Nombre de la meta</label><input id="editGoalName" required maxlength="48">
+  <label for="editGoalTarget">Monto objetivo (MXN)</label><input id="editGoalTarget" type="number" min="1" step=".01" required>
+  <label for="editGoalSaved">Ahorro acumulado (MXN)</label><input id="editGoalSaved" type="number" min="0" step=".01" required>
+  <label for="editGoalWeekly">Aportación semanal planeada (MXN)</label><input id="editGoalWeekly" type="number" min=".01" step=".01" required>
+  <label for="editBudget">Presupuesto semanal (MXN)</label><input id="editBudget" type="number" min=".01" step=".01" required>
+  <div class="actions"><button class="primary" type="submit">Guardar cambios</button><button type="button" id="backBtn">Volver</button></div>
+ </form>
+ <section class="card"><h2>Administrar apartados</h2><p class="muted">Puedes cambiar nombres y cantidades en la lista principal, o añadir apartados nuevos.</p><button id="resetApp">Borrar configuración y empezar de nuevo</button></section>
+</section>
 </main>
 <script>
-const items = [
-  {id:"doblevi", name:"Doble VI — equipo", amount:300},
-  {id:"personal", name:"Ahorro personal", amount:225},
-  {id:"emergency", name:"Fondo de emergencia", amount:100},
-  {id:"flex", name:"Dinero flexible", amount:105.77}
-];
-const key="mis-apartados-pwa-v1";
-let state={};
-try{state=JSON.parse(localStorage.getItem(key)||"{}")}catch(e){state={}}
-function money(n){return n.toLocaleString("es-MX",{style:"currency",currency:"MXN"})}
+const STORE="mis-apartados-custom-v2";
+let data=null, checks={};
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n||0).toLocaleString("es-MX",{style:"currency",currency:"MXN"});
+function load(){try{data=JSON.parse(localStorage.getItem(STORE)||"null")}catch(e){data=null}try{checks=JSON.parse(localStorage.getItem(STORE+"-checks")||"{}")}catch(e){checks={}}}
+function save(){localStorage.setItem(STORE,JSON.stringify(data));localStorage.setItem(STORE+"-checks",JSON.stringify(checks))}
+function show(which){["setup","dashboard","settings"].forEach(id=>$(id).classList.toggle("hidden",id!==which))}
 function render(){
- const host=document.getElementById("items"); host.innerHTML="";
- items.forEach(it=>{
-  const div=document.createElement("div"); div.className="item";
-  const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=!!state[it.id]; cb.id=it.id;
-  cb.addEventListener("change",()=>{state[it.id]=cb.checked;save();render()});
-  const label=document.createElement("label"); label.htmlFor=it.id; label.textContent=it.name;
-  const amount=document.createElement("span"); amount.className="amount"; amount.textContent=money(it.amount);
-  div.append(cb,label,amount);host.append(div);
+ if(!data){show("setup");return}
+ show("dashboard");
+ $("dashGoal").textContent=data.goalName;
+ $("goalSavedText").textContent=fmt(data.goalSaved);
+ $("goalTargetText").textContent="Meta: "+fmt(data.goalTarget);
+ const pct=Math.min(100,data.goalSaved/data.goalTarget*100);
+ $("goalBar").style.width=pct+"%";$("goalPercent").textContent=pct.toFixed(0)+"% completado";
+ $("weeklyGoalText").textContent=fmt(data.goalWeekly);
+ $("goalRemaining").textContent=fmt(Math.max(0,data.goalTarget-data.goalSaved));
+ $("budgetText").textContent=fmt(data.weeklyBudget);
+ const host=$("items");host.innerHTML="";
+ data.items.forEach((it,i)=>{
+  const row=document.createElement("div");row.className="item";
+  const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!checks[it.id];
+  cb.addEventListener("change",()=>{checks[it.id]=cb.checked;save();render()});
+  const name=document.createElement("label");name.textContent=it.name;
+  const amt=document.createElement("span");amt.className="amount";amt.textContent=fmt(it.amount);
+  const edit=document.createElement("button");edit.className="smallbtn";edit.textContent="Editar";
+  edit.addEventListener("click",()=>editItem(i));
+  row.append(cb,name,amt,edit);host.append(row);
  });
- const saved=items.reduce((s,it)=>s+(state[it.id]?it.amount:0),0);
- document.getElementById("saved").textContent=money(saved);
- document.getElementById("bar").style.width=(saved/730.77*100)+"%";
- document.getElementById("percent").textContent=Math.round(saved/730.77*100)+"% de tus apartados";
+ const marked=data.items.reduce((s,it)=>s+(checks[it.id]?Number(it.amount):0),0);
+ $("checkedTotal").textContent=fmt(marked);
+ $("weekBar").style.width=Math.min(100,marked/data.weeklyBudget*100)+"%";
 }
-function save(){localStorage.setItem(key,JSON.stringify(state))}
-document.getElementById("reset").addEventListener("click",()=>{
- if(confirm("¿Reiniciar las casillas para una nueva semana?")){state={};save();render()}
+function editItem(i){
+ const it=data.items[i];const n=prompt("Nombre del apartado:",it.name);if(n===null)return;
+ const a=prompt("Cantidad semanal en MXN:",it.amount);if(a===null)return;
+ if(!n.trim()||!Number.isFinite(Number(a))||Number(a)<0){alert("Escribe un nombre y una cantidad válida.");return}
+ it.name=n.trim();it.amount=Number(a);save();render();
+}
+$("setupForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const target=Number($("goalTarget").value),saved=Number($("goalSaved").value||0),weekly=Number($("goalWeekly").value),budget=Number($("weeklyBudget").value);
+ if(target<=0||saved<0||weekly<=0||budget<=0){alert("Revisa los montos.");return}
+ const name=$("goalName").value.trim();if(!name)return;
+ data={goalName:name,goalTarget:target,goalSaved:saved,goalWeekly:weekly,weeklyBudget:budget,items:[
+  {id:"goal",name:"Meta: "+name,amount:weekly},
+  {id:"personal",name:"Ahorro personal",amount:0},
+  {id:"emergency",name:"Fondo de emergencia",amount:0}
+ ]};checks={};save();render();
 });
-render();
-if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+$("settingsBtn").addEventListener("click",()=>{
+ $("editGoalName").value=data.goalName;$("editGoalTarget").value=data.goalTarget;$("editGoalSaved").value=data.goalSaved;$("editGoalWeekly").value=data.goalWeekly;$("editBudget").value=data.weeklyBudget;show("settings");
+});
+$("settingsForm").addEventListener("submit",e=>{
+ e.preventDefault();data.goalName=$("editGoalName").value.trim();data.goalTarget=Number($("editGoalTarget").value);data.goalSaved=Number($("editGoalSaved").value);data.goalWeekly=Number($("editGoalWeekly").value);data.weeklyBudget=Number($("editBudget").value);
+ if(!data.goalName||data.goalTarget<=0||data.goalSaved<0||data.goalWeekly<=0||data.weeklyBudget<=0){alert("Revisa los datos.");return}
+ const first=data.items.find(x=>x.id==="goal");if(first){first.name="Meta: "+data.goalName;first.amount=data.goalWeekly}
+ save();render();
+});
+$("backBtn").addEventListener("click",render);
+$("addContribution").addEventListener("click",()=>{
+ const amount=Number($("contribution").value);if(!Number.isFinite(amount)||amount<=0){alert("Escribe una cantidad válida.");return}
+ data.goalSaved+=amount;$("contribution").value="";save();render();
+});
+$("newWeek").addEventListener("click",()=>{if(confirm("¿Limpiar las casillas para comenzar una nueva semana?")){checks={};save();render()}});
+$("addItem").addEventListener("click",()=>{
+ const name=prompt("Nombre del nuevo apartado:");if(!name||!name.trim())return;
+ const amount=Number(prompt("Cantidad semanal en MXN:","0"));if(!Number.isFinite(amount)||amount<0){alert("Cantidad no válida.");return}
+ data.items.push({id:"item-"+Date.now(),name:name.trim(),amount});save();render();
+});
+$("resetApp").addEventListener("click",()=>{
+ if(confirm("Esto borrará la configuración de esta app en este dispositivo. ¿Continuar?")){localStorage.removeItem(STORE);localStorage.removeItem(STORE+"-checks");data=null;checks={};$("setupForm").reset();show("setup")}
+});
+load();render();
+if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
 </script>
-</body>
-</html>
+</body></html>
