@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#f3f5fa",
   "theme_color": "#172554",
-  "description": "Organiza tus apartados y avanza hacia tu meta de ahorro.",
+  "description": "Organiza tus apartados y registra tus metas cumplidas.",
   "icons": [
     {
       "src": "icon-192.png",
