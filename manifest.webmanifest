@@ -6,19 +6,17 @@
   "display": "standalone",
   "background_color": "#f3f5fa",
   "theme_color": "#172554",
-  "description": "Organizador semanal de apartados y presupuesto.",
+  "description": "Organiza tus apartados y avanza hacia tu meta de ahorro.",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     }
   ]
 }
