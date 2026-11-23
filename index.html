@@ -39,7 +39,7 @@ button.primary{background:#172554;color:white}button.danger{background:#fff0f0;c
 
 <section id="dashboard" class="hidden">
  <div class="hero"><div class="row"><div><h1>Mis apartados</h1><p>Organiza tus metas y celebra tus avances.</p></div><button id="settingsBtn">⚙</button></div></div>
- <div class="tabs"><button class="tab active" id="activeTab">Meta activa</button><button class="tab" id="doneTab">Metas cumplidas (<span id="doneCount">0</span>)</button></div>
+ <div class="tabs"><button class="tab active" id="activeTab">Meta activa</button><button class="tab" id="doneTab">Metas cumplidas (<span id="doneCount">0</span>)</button><button class="tab" id="historyTab">Historial semanal</button></div>
  <section id="activeView">
   <section class="card">
    <div class="muted">Mi meta principal</div><h2 id="dashGoal" style="font-size:21px;margin:4px 0"></h2>
@@ -58,6 +58,14 @@ button.primary{background:#172554;color:white}button.danger{background:#fff0f0;c
   </section>
  </section>
  <section id="doneView" class="hidden"><section class="card"><h2>Metas cumplidas</h2><p class="muted">Aquí se guardan las metas que marques como completadas.</p><div id="historyList"></div></section></section>
+ <section id="weeklyView" class="hidden">
+  <section class="card">
+   <div class="muted">Total apartado en todas las semanas registradas</div>
+   <div class="big" id="weeklyGrandTotal">$0.00</div>
+   <p class="muted">Este total suma los registros guardados al pulsar «Nueva semana».</p>
+  </section>
+  <section class="card"><h2>Historial de apartados</h2><div id="weeklyHistoryList"></div></section>
+ </section>
  <p class="foot">Los datos se guardan en este dispositivo y navegador.</p>
 </section>
 
@@ -73,13 +81,22 @@ button.primary{background:#172554;color:white}button.danger{background:#fff0f0;c
 </section>
 </main>
 <script>
-const KEY="mis-apartados-custom-v2", HIST="mis-apartados-completed-v1", CHECK="mis-apartados-custom-v2-checks";
+const KEY="mis-apartados-custom-v2", HIST="mis-apartados-completed-v1", CHECK="mis-apartados-custom-v2-checks", WEEKHIST="mis-apartados-week-history-v1";
 const $=id=>document.getElementById(id),fmt=n=>Number(n||0).toLocaleString("es-MX",{style:"currency",currency:"MXN"});
-let data=null,history=[],checks={};
+let data=null,history=[],checks={},weekHistory=[];
 function read(k,def){try{return JSON.parse(localStorage.getItem(k)||"null")??def}catch(e){return def}}
-function save(){localStorage.setItem(KEY,JSON.stringify(data));localStorage.setItem(HIST,JSON.stringify(history));localStorage.setItem(CHECK,JSON.stringify(checks))}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));localStorage.setItem(HIST,JSON.stringify(history));localStorage.setItem(CHECK,JSON.stringify(checks));localStorage.setItem(WEEKHIST,JSON.stringify(weekHistory))}
 function show(id){["setup","dashboard","settings"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
-function tab(which){$("activeView").classList.toggle("hidden",which!=="active");$("doneView").classList.toggle("hidden",which!=="done");$("activeTab").classList.toggle("active",which==="active");$("doneTab").classList.toggle("active",which==="done");if(which==="done")renderHistory()}
+function tab(which){
+ $("activeView").classList.toggle("hidden",which!=="active");
+ $("doneView").classList.toggle("hidden",which!=="done");
+ $("weeklyView").classList.toggle("hidden",which!=="weekly");
+ $("activeTab").classList.toggle("active",which==="active");
+ $("doneTab").classList.toggle("active",which==="done");
+ $("historyTab").classList.toggle("active",which==="weekly");
+ if(which==="done")renderHistory();
+ if(which==="weekly")renderWeeklyHistory();
+}
 function renderHistory(){
  $("doneCount").textContent=history.length;const host=$("historyList");host.innerHTML="";
  if(!history.length){host.textContent="Todavía no tienes metas cumplidas.";host.className="muted";return}
@@ -96,6 +113,22 @@ function renderHistory(){
   div.append(top,detail,del);host.append(div);
  });
 }
+function renderWeeklyHistory(){
+ const total=weekHistory.reduce((sum,w)=>sum+Number(w.total||0),0);
+ $("weeklyGrandTotal").textContent=fmt(total);
+ const host=$("weeklyHistoryList");host.innerHTML="";
+ if(!weekHistory.length){host.textContent="Todavía no has guardado semanas. Al pulsar «Nueva semana» se registrará lo que marcaste como apartado.";host.className="muted";return}
+ host.className="";
+ weekHistory.slice().reverse().forEach((w,idx)=>{
+  const div=document.createElement("div");div.className="archive";
+  const top=document.createElement("div");top.className="row";
+  const label=document.createElement("strong");label.textContent="Semana del "+w.date;
+  const amount=document.createElement("strong");amount.textContent=fmt(w.total);
+  top.append(label,amount);
+  const detail=document.createElement("p");detail.className="muted";detail.textContent=(w.items||[]).join(" · ")||"Apartado semanal";
+  div.append(top,detail);host.append(div);
+ });
+}
 function render(){
  if(!data){show("setup");return}show("dashboard");$("doneCount").textContent=history.length;
  $("dashGoal").textContent=data.goalName;$("goalSavedText").textContent=fmt(data.goalSaved);$("goalTargetText").textContent="Meta: "+fmt(data.goalTarget);
@@ -106,15 +139,21 @@ function render(){
  const marked=data.items.reduce((s,it)=>s+(checks[it.id]?Number(it.amount):0),0);$("checkedTotal").textContent=fmt(marked);$("weekBar").style.width=Math.min(100,marked/data.weeklyBudget*100)+"%";
 }
 $("setupForm").addEventListener("submit",e=>{e.preventDefault();data={goalName:$("goalName").value.trim(),goalTarget:Number($("goalTarget").value),goalSaved:Number($("goalSaved").value||0),goalWeekly:Number($("goalWeekly").value),weeklyBudget:Number($("weeklyBudget").value),items:[{id:"goal-"+Date.now(),name:"Meta: "+$("goalName").value.trim(),amount:Number($("goalWeekly").value)},{id:"personal-"+Date.now(),name:"Ahorro personal",amount:0}]};checks={};save();render()});
-$("activeTab").addEventListener("click",()=>tab("active"));$("doneTab").addEventListener("click",()=>tab("done"));
+$("activeTab").addEventListener("click",()=>tab("active"));$("doneTab").addEventListener("click",()=>tab("done"));$("historyTab").addEventListener("click",()=>tab("weekly"));
 $("settingsBtn").addEventListener("click",()=>{$("editGoalName").value=data.goalName;$("editGoalTarget").value=data.goalTarget;$("editGoalSaved").value=data.goalSaved;$("editGoalWeekly").value=data.goalWeekly;$("editBudget").value=data.weeklyBudget;show("settings")});
 $("settingsForm").addEventListener("submit",e=>{e.preventDefault();data.goalName=$("editGoalName").value.trim();data.goalTarget=Number($("editGoalTarget").value);data.goalSaved=Number($("editGoalSaved").value);data.goalWeekly=Number($("editGoalWeekly").value);data.weeklyBudget=Number($("editBudget").value);if(!data.goalName||data.goalTarget<=0||data.goalSaved<0||data.goalWeekly<=0||data.weeklyBudget<=0){alert("Revisa los datos.");return}const it=data.items[0];if(it&&it.id.startsWith("goal-")){it.name="Meta: "+data.goalName;it.amount=data.goalWeekly}save();render()});
 $("backBtn").addEventListener("click",render);
 $("addContribution").addEventListener("click",()=>{const a=Number($("contribution").value);if(!Number.isFinite(a)||a<=0){alert("Escribe una cantidad válida.");return}data.goalSaved+=a;$("contribution").value="";save();render()});
 $("completeGoal").addEventListener("click",()=>{if(!confirm("¿Guardar esta meta en Metas cumplidas y comenzar una nueva?"))return;history.push({name:data.goalName,target:data.goalTarget,saved:data.goalSaved,date:new Date().toLocaleDateString("es-MX")});data=null;checks={};save();$("setupForm").reset();$("goalSaved").value=0;render()});
 $("deleteGoal").addEventListener("click",()=>{if(!confirm("¿Eliminar esta meta activa? No se guardará en Metas cumplidas."))return;data=null;checks={};save();$("setupForm").reset();$("goalSaved").value=0;render()});
-$("newWeek").addEventListener("click",()=>{if(confirm("¿Limpiar las casillas para comenzar una nueva semana?")){checks={};save();render()}});
+$("newWeek").addEventListener("click",()=>{
+ const selected=data.items.filter(it=>checks[it.id]);
+ const total=selected.reduce((sum,it)=>sum+Number(it.amount||0),0);
+ if(!confirm("Se guardarán "+fmt(total)+" como apartado de esta semana y se limpiarán las casillas. ¿Continuar?"))return;
+ weekHistory.push({date:new Date().toLocaleDateString("es-MX"),total,items:selected.map(it=>it.name+" ("+fmt(it.amount)+")")});
+ checks={};save();localStorage.setItem(WEEKHIST,JSON.stringify(weekHistory));render();
+});
 $("addItem").addEventListener("click",()=>{const n=prompt("Nombre del nuevo apartado:");if(!n||!n.trim())return;const a=Number(prompt("Cantidad semanal en MXN:","0"));if(!Number.isFinite(a)||a<0){alert("Cantidad no válida.");return}data.items.push({id:"item-"+Date.now(),name:n.trim(),amount:a});save();render()});
-data=read(KEY,null);history=read(HIST,[]);checks=read(CHECK,{});render();
+data=read(KEY,null);history=read(HIST,[]);checks=read(CHECK,{});weekHistory=read(WEEKHIST,[]);render();
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 </script></body></html>
